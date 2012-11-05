@@ -1,4 +1,0 @@
-
-...
-
-{{ filevars('../example_drydoc.txt') }}
