@@ -39,7 +39,7 @@ except ImportError:
 
 def parse_dry_doc(text, encoding):
     text = text.decode(encoding, errors='replace')
-    text_parts = text.split('...\n', 1)
+    text_parts = text.split('\n...\n', 1)
     definitions = text_parts[0].strip()
     template = text_parts[1]
 
