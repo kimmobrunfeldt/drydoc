@@ -13,7 +13,7 @@ Usage
 -----
 
     Usage:
-      drydoc.py <filename> [--encoding=<encoding>] [--output=<output>]
+      drydoc.py [<filename>] [--encoding=<encoding>] [--output=<output>]
       drydoc.py -h | --help
       drydoc.py --version
 

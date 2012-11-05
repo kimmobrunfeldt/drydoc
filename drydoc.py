@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-"""Renderes DRY documents.
+"""Renders DRY documents.
 
 Usage:
   drydoc.py [<filename>] [--encoding=<encoding>] [--output=<output>]
