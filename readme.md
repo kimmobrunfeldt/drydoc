@@ -1,16 +1,16 @@
 This program parses DRY documents.
 
-Usage:
-  drydoc.py <filename> [--encoding=<encoding>] [--output=<output>]
-  drydoc.py -h | --help
-  drydoc.py --version
+    Usage:
+      drydoc.py <filename> [--encoding=<encoding>] [--output=<output>]
+      drydoc.py -h | --help
+      drydoc.py --version
 
 
-Options:
-  -h --help                 Show this screen.
-  -v --version              Show version.
-  -e --encoding=<encoding>  Encoding of the input file.
-  -o --output=<output>      Output file.
+    Options:
+      -h --help                 Show this screen.
+      -v --version              Show version.
+      -e --encoding=<encoding>  Encoding of the input file.
+      -o --output=<output>      Output file.
 
 DRY document structure
 ----------------------
