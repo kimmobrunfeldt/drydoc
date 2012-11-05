@@ -3,7 +3,7 @@
 #
 
 """
-Tests for Table class.
+Tests for DRY document rendering.
 """
 
 import filecmp
