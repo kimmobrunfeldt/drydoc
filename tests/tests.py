@@ -140,6 +140,7 @@ class TestDryFileRender(unittest.TestCase):
 
         os.remove(filepath)
 
+    # Todo: write tests for cross file variable accessing
 
 if __name__ == '__main__':
     unittest.main()
