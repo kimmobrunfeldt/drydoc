@@ -1,9 +1,6 @@
 """
 Example parsers for DRY document.
 They are very very simple for demonstration purposes.
-
-Setting variable_engine=parse_variables() and template_engine=Template()
-in drydoc.py would
 """
 
 
