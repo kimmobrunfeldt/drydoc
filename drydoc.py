@@ -18,6 +18,7 @@ Options:
 __version__ = '0.0.1'
 
 
+import os
 import sys
 import parsers
 
@@ -44,14 +45,22 @@ except ImportError:
 
 try:
     import jinja2
-    template_engines['jinja2'] = (jinja2.Template, (LookupError, ))
+    template_engines['jinja2'] = (jinja2.Template, ())
 except ImportError:
     pass
+
 
 # Constants
 _PY3 = sys.version_info >= (3, 0)
 default_encoding = 'utf-8'
 section_separator = '\n...\n'
+# Variables to pass by default to all templates
+template_variables = {}
+
+
+class AttributeDict(dict):
+    __getattr__ = dict.__getitem__
+    __setattr__ = dict.__setitem__
 
 
 def read_file(filepath, encoding=default_encoding):
@@ -79,8 +88,39 @@ def write_file(text, filepath, encoding=default_encoding):
         f.write(text)
 
 
-def render_dry_text(dry_text, variable_engine, template_engine):
-    """Returns rendered text from DRY text. dry_text must be unicode."""
+def variables_from_file(filepath, originaldir, variable_engine,
+                        encoding=default_encoding):
+    """Returns variables dictionary from a DRY document.
+    originaldir is the directory where the original DRY document is
+    located.
+    """
+    filepath = os.path.abspath(os.path.join(originaldir, filepath))
+
+    variables = {}
+    dry_text = read_file(filepath, encoding=encoding)
+    text_parts = dry_text.split(section_separator, 1)
+    if len(text_parts) != 2:
+        return variables
+
+    top_section = text_parts[0].strip()
+
+    if len(top_section):
+        variables = variable_engine(top_section)
+
+    d = AttributeDict()
+    try:
+        d.update(variables)
+    except TypeError:
+        raise TypeError('Check syntax of variables in \'%s\'' % filepath)
+
+    return d
+
+
+def render_dry_text(dry_text, variable_engine, template_engine,
+                    add_variables=None):
+    """Returns rendered text from DRY text. dry_text must be unicode.
+    You can optionally specify default variables.
+    """
     text_parts = dry_text.split(section_separator, 1)
     if len(text_parts) != 2:
         return dry_text
@@ -93,12 +133,15 @@ def render_dry_text(dry_text, variable_engine, template_engine):
     else:
         variables = variable_engine(variables)
 
+    if add_variables is not None:
+        try:
+            variables.update(add_variables)
+        except TypeError:
+            # variables should be a dict-like object
+            raise TypeError('Check syntax of variables.')
+
     t = template_engine(template)
-    try:
-        rendered = t.render(**variables).lstrip()
-    except TypeError:
-        # variables should be a dict-like object
-        raise TypeError('Check syntax of variables.')
+    rendered = t.render(**variables).lstrip()
 
     # Try to detect if jinja2 is used
     module = template_engine.__module__
@@ -108,6 +151,17 @@ def render_dry_text(dry_text, variable_engine, template_engine):
             rendered += '\n'
 
     return rendered
+
+
+def scriptdir():
+    return os.path.split(os.path.realpath(__file__))[0]
+
+
+def inputfiledir(filename):
+    """Returns the directory where the given inputfile is located."""
+    originalpath = os.path.abspath(os.path.join(os.getcwd(), filename))
+    originaldir = os.path.split(originalpath)[0]
+    return originaldir
 
 
 def main():
@@ -138,8 +192,21 @@ def main():
     template_engine_info = template_engines[name]
     template_engine, template_engine_except = template_engine_info
 
+    if name == 'jinja2':
+        # Add filevars() function for jinja2 templates
+        if filename is None:
+            originaldir = os.getcwd()
+        else:
+            originaldir = inputfiledir(filename)
+
+        filevars = lambda path: variables_from_file(path, originaldir,
+                                                    variable_engine,
+                                                    encoding=encoding)
+        template_variables['filevars'] = filevars
+
     try:
-        rendered_text = render_dry_text(text, variable_engine, template_engine)
+        rendered_text = render_dry_text(text, variable_engine, template_engine,
+                                        add_variables=template_variables)
     except variable_engine_except as e:
         print('Error parsing variables: %s' % str(e).capitalize())
         sys.exit(1)

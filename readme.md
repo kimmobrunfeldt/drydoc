@@ -79,3 +79,33 @@ Will render to:
         - cola
 
     DRY documents support unicode, so you can have text like this '汉语漢'.
+
+Variables across files
+----------------------
+
+You can access variables in other DRY documents with filevars() function inside Jinja2 template.
+Filepaths are always relative to the *original* DRY document.
+
+For example:
+
+/home/jack/drydoc1.txt:
+
+    name: drydoc1.txt
+    ...
+    This document is '{{ name }}'.
+
+    The other document is '{{ filevars('library/drydoc2.txt').name }}'.
+
+
+/home/jack/library/drydoc2.txt:
+
+    name: drydoc2.txt
+    ...
+    This document is '{{ name }}'.
+
+    The other document is '{{ filevars('../drydoc1.txt').name }}'
+
+The first level of dictionary nesting can be accessed via attribute, i.e. dict.attr. If the dictionary contains subdictionarys, they must be accessed normally with dict['attr'].
+
+    filevars('dates.txt').weekdays['monday']
+
