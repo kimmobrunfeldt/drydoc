@@ -4,7 +4,6 @@ drydoc.py
 It is a program that renders DRY documents to actual text
 
 Dependencies
-^^^^^^^^^^^^
 
 - Jinja2 http://jinja.pocoo.org/docs/
 - PyYAML http://pyyaml.org/wiki/PyYAML
@@ -31,7 +30,7 @@ The rest of the document, after the three dots, is rendered as a Jinja2
 template, with the variables defined in the beginning.
 Whitespace from the beginning of actual template is stripped out.
 
-See [[drydoc|doc.txt]] for example DRY document.
+See doc.txt for example DRY document.
 
 Usage
 -----

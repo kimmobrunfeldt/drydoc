@@ -19,7 +19,7 @@ __version__ = '0.0.1'
 
 # 'Constants'
 default_encoding = 'utf-8'
-
+section_separator = '\n...\n'
 
 import sys
 try:
@@ -39,7 +39,7 @@ except ImportError:
 
 def parse_dry_doc(text, encoding):
     text = text.decode(encoding, errors='replace')
-    text_parts = text.split('\n...\n', 1)
+    text_parts = text.split(section_separator, 1)
     definitions = text_parts[0].strip()
     template = text_parts[1]
 
