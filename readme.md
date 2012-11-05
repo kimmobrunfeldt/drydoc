@@ -24,15 +24,15 @@ Usage
       -e --encoding=<encoding>  Encoding of the input file.
       -o --output=<output>      Output file.
 
-DRY document
-------------
+What is DRY document?
+---------------------
 
 DRY document is a text file with variables and templating features to prevent you from
 repeating yourself throughout the document.
 
 
-DRY document structure
-----------------------
+Document structure
+------------------
 
     ---
     variable: variables
@@ -48,8 +48,8 @@ The rest of the document, after the three dots, is rendered as a Jinja2
 template, with the variables defined in the beginning.
 Whitespace from the beginning of actual template is stripped out.
 
-Another example
----------------
+Example
+-------
 
 DRY document:
 
@@ -67,7 +67,7 @@ DRY document:
     Remember to buy:
     {% for item in shopping_list %}    - {{ item }}
     {% endfor %}
-    DRY documents support unicode, so you can have text like this '{{ unicode }}'.
+    Documents support unicode, so you can have text like this '{{ unicode }}'.
 
 Will render to:
 
@@ -78,7 +78,7 @@ Will render to:
         - bread
         - cola
 
-    DRY documents support unicode, so you can have text like this '汉语漢'.
+    Documents support unicode, so you can have text like this '汉语漢'.
 
 Variables across files
 ----------------------

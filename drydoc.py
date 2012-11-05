@@ -21,6 +21,7 @@ __version__ = '0.0.1'
 import os
 import sys
 import parsers
+import templatefunctions
 
 
 # Format: {name_of_engine: (variable_parse_func, (Exception1, Exception2))}
@@ -92,6 +93,13 @@ def write_file(text, filepath, encoding=default_encoding):
         f.write(text)
 
 
+def inputfiledir(filename):
+    """Returns the directory where given inputfile is located."""
+    originalpath = os.path.abspath(os.path.join(os.getcwd(), filename))
+    originaldir = os.path.split(originalpath)[0]
+    return originaldir
+
+
 def variables_from_file(filepath, originaldir, variable_engine,
                         encoding=default_encoding):
     """Returns variables dictionary from a DRY document.
@@ -157,13 +165,6 @@ def render_dry_text(dry_text, variable_engine, template_engine,
     return rendered
 
 
-def inputfiledir(filename):
-    """Returns the directory where the given inputfile is located."""
-    originalpath = os.path.abspath(os.path.join(os.getcwd(), filename))
-    originaldir = os.path.split(originalpath)[0]
-    return originaldir
-
-
 def main():
     from docopt import docopt
     arguments = docopt(__doc__, argv=sys.argv[1:],
@@ -194,16 +195,21 @@ def main():
     template_engine, template_engine_except = template_engine_info
 
     if name == 'jinja2':
-        # Add filevars() function for jinja2 templates
+        # Add functions for jinja2 templates
         if filename is None:
-            originaldir = os.getcwd()
+            drydocdir = os.getcwd()
         else:
-            originaldir = inputfiledir(filename)
+            drydocdir = inputfiledir(filename)
 
-        filevars = lambda path: variables_from_file(path, originaldir,
-                                                    variable_engine,
-                                                    encoding=encoding)
-        template_variables['filevars'] = filevars
+        info = {'drydocdir': drydocdir, 'encoding': encoding,
+                'variable_engine': variable_engine,
+                'template_engine': template_engine,
+                'inputfile': filename}
+
+        funcs = templatefunctions.get_all(info)
+        template_variables.update(funcs)
+
+        info['template_variables'] = template_variables
 
     try:
         rendered_text = render_dry_text(text, variable_engine, template_engine,

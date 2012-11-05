@@ -1,0 +1,5 @@
+name: d2.txt
+...
+This document is '{{ name }}'.
+
+The other document is '{{ filevars('d1.txt').name }}'.
