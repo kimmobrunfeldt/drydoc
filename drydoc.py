@@ -59,6 +59,10 @@ template_variables = {}
 
 
 class AttributeDict(dict):
+    """Provides access to items via attributes.
+    dictionary.attr == dictionary['attr']
+    Beware of keys that are not correct variable names in Python.
+    """
     __getattr__ = dict.__getitem__
     __setattr__ = dict.__setitem__
 
@@ -177,6 +181,7 @@ def main():
             print('Could not open file. %s' % e)
             sys.exit(1)
     else:
+        # This makes it possible to use via pipe e.g. x | python drydoc.py
         text = sys.stdin.read()
 
     # Set the engines
