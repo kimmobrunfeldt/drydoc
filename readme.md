@@ -51,7 +51,7 @@ Whitespace from the beginning of actual template is stripped out.
 Another example
 ---------------
 
-Dry document:
+DRY document:
 
     ---
     intro: This is an example DRY document.
