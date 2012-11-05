@@ -29,3 +29,4 @@ Whitespace from the beginning is stripped out.
 
 Jinja2 documentation: http://jinja.pocoo.org/docs/.
 
+See doc.txt for example DRY document.
