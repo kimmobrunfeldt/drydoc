@@ -18,6 +18,7 @@ repeating yourself throughout the document.
 DRY document structure
 ----------------------
 
+    ---
     variable: variables
     ...
     The actual template with {{ variable }}.
@@ -30,7 +31,24 @@ The rest of the document, after the three dots, is rendered as a Jinja2
 template, with the variables defined in the beginning.
 Whitespace from the beginning of actual template is stripped out.
 
-See doc.txt for example DRY document.
+Another example
+---------------
+
+    ---
+    intro: This is an example DRY document.
+    shopping_list:
+        - milk
+        - bread
+        - cola
+    unicode: 汉语漢
+    ...
+
+    {{ intro }}
+
+    Remember to buy:
+    {% for item in shopping_list %}    - {{ item }}
+    {% endfor %}
+    DRY documents support unicode, so you can have text like this '{{ unicode }}'.
 
 Usage
 -----

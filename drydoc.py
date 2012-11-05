@@ -1,9 +1,9 @@
 #!/usr/bin/python
 
-"""Parses DRY-documents.
+"""Renderes DRY documents.
 
 Usage:
-  drydoc.py <filename> [--encoding=<encoding>] [--output=<output>]
+  drydoc.py [<filename>] [--encoding=<encoding>] [--output=<output>]
   drydoc.py -h | --help
   drydoc.py --version
 
@@ -17,43 +17,96 @@ Options:
 
 __version__ = '0.0.1'
 
-# 'Constants'
-default_encoding = 'utf-8'
-section_separator = '\n...\n'
 
 import sys
+import parsers
+
+
+# Format: {name_of_engine: (variable_parse_func, (Exception1, Exception2))}
+variable_engines = {}
+# Format: {name_of_engine: (TemplateClass, (Exception1, Exception2))}
+template_engines = {}
+
+# Exceptions listed in engines are catched, and nicer errors provided. To
+# format messages even more, make your own exception class and
+# format errors in it.
+
+# Import example engines.
+variable_engines['example'] = (parsers.parse_variables, (ValueError))
+template_engines['example'] = (parsers.Template, ())
+
 try:
     import yaml
+    variable_engines['yaml'] = (yaml.load, (yaml.reader.ReaderError,
+                                            TypeError))
 except ImportError:
-    print('You must have PyYAML installed!')
-    print('See: http://pyyaml.org/wiki/PyYAML#DownloadandInstallation')
-    sys.exit(1)
+    pass
 
 try:
     import jinja2
+    template_engines['jinja2'] = (jinja2.Template, (LookupError, ))
 except ImportError:
-    print('You must have Jinja2 installed!')
-    print('See: http://jinja.pocoo.org/')
-    sys.exit(1)
+    pass
+
+# Constants
+_PY3 = sys.version_info >= (3, 0)
+default_encoding = 'utf-8'
+section_separator = '\n...\n'
 
 
-def parse_dry_doc(text, encoding):
-    text = text.decode(encoding, errors='replace')
-    text_parts = text.split(section_separator, 1)
-    definitions = text_parts[0].strip()
+def read_file(filepath, encoding=default_encoding):
+    open_func = open
+    if _PY3:
+        open_func = lambda f, mode: open(f, mode, encoding=encoding)
+
+    with open_func(filepath, 'r') as f:
+        content = f.read()
+
+    if not _PY3:
+        content = content.decode(encoding)
+
+    return content
+
+
+def write_file(text, filepath, encoding=default_encoding):
+    open_func = open
+    if _PY3:
+        open_func = lambda f, mode: open(f, mode, encoding=encoding)
+    else:
+        text = text.encode(encoding)
+
+    with open_func(filepath, 'w') as f:
+        f.write(text)
+
+
+def render_dry_text(dry_text, variable_engine, template_engine):
+    """Returns rendered text from DRY text. dry_text must be unicode."""
+    text_parts = dry_text.split(section_separator, 1)
+    if len(text_parts) != 2:
+        return dry_text
+
+    variables = text_parts[0].strip()
     template = text_parts[1]
 
-    if not len(definitions):
-        return text
+    if not len(variables):
+        variables = {}
+    else:
+        variables = variable_engine(variables)
 
-    definitions = yaml.load(definitions)
+    t = template_engine(template)
+    try:
+        rendered = t.render(**variables).lstrip()
+    except TypeError:
+        # variables should be a dict-like object
+        raise TypeError('Check syntax of variables.')
 
-    t = jinja2.Template(template)
-    rendered = t.render(**definitions).lstrip()
-    if text[-1] == '\n' and rendered[-1] != '\n':
-        rendered += '\n'
+    # Try to detect if jinja2 is used
+    module = template_engine.__module__
+    if module is not None and 'jinja2.' in module:
+        # Jinja2 might remove last newline
+        if dry_text[-1] == '\n' and rendered[-1] != '\n':
+            rendered += '\n'
 
-    rendered = rendered.encode(encoding)
     return rendered
 
 
@@ -62,39 +115,54 @@ def main():
     arguments = docopt(__doc__, argv=sys.argv[1:],
                        help=True, version=__version__)
 
-    filename = arguments['<filename>']
-    try:
-        f = open(filename)
-    except IOError, e:
-        print('Could not open file. %s' % e)
-        sys.exit(1)
-    text = f.read()
-    f.close()
-
     encoding = arguments['--encoding']
     if encoding is None:
         encoding = default_encoding
+
+    filename = arguments['<filename>']
+    if filename is not None:
+        try:
+            text = read_file(filename)
+        except IOError as e:
+            print('Could not open file. %s' % e)
+            sys.exit(1)
+    else:
+        text = sys.stdin.read()
+
+    # Set the engines
+    name = 'yaml' if ('yaml' in variable_engines) else 'example'
+    variable_engine_info = variable_engines[name]
+    variable_engine, variable_engine_except = variable_engine_info
+
+    name = 'jinja2' if ('jinja2' in template_engines) else 'example'
+    template_engine_info = template_engines[name]
+    template_engine, template_engine_except = template_engine_info
+
     try:
-        rendered_text = parse_dry_doc(text, encoding=encoding)
-    except LookupError, e:
-        print(str(e).capitalize())
-        sys.exit(1)
-    except yaml.reader.ReaderError, e:
+        rendered_text = render_dry_text(text, variable_engine, template_engine)
+    except variable_engine_except as e:
         print('Error parsing variables: %s' % str(e).capitalize())
+        sys.exit(1)
+    except template_engine_except as e:
+        print('Error parsing template: %s' % str(e).capitalize())
         sys.exit(1)
 
     output = arguments['--output']
     if output is not None:
         try:
-            f = open(output, 'w')
-        except IOError, e:
+            write_file(rendered_text, output, encoding=encoding)
+        except IOError as e:
             print('Could not open file. %s' % e)
             sys.exit(1)
-        f.write(rendered_text)
-        f.close()
     else:
-        print(rendered_text)
+        if _PY3:
+            sys.stdout.write(rendered_text)
+        else:
+            sys.stdout.write(rendered_text.encode(encoding))
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print('Quit.')

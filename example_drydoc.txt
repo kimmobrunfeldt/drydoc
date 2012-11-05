@@ -1,0 +1,15 @@
+---
+intro: This is an example DRY document.
+shopping_list:
+    - milk
+    - bread
+    - cola
+unicode: 汉语漢
+...
+
+{{ intro }}
+
+Remember to buy:
+{% for item in shopping_list %}    - {{ item }}
+{% endfor %}
+DRY documents support unicode, so you can have text like this '{{ unicode }}'.
