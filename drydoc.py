@@ -153,10 +153,6 @@ def render_dry_text(dry_text, variable_engine, template_engine,
     return rendered
 
 
-def scriptdir():
-    return os.path.split(os.path.realpath(__file__))[0]
-
-
 def inputfiledir(filename):
     """Returns the directory where the given inputfile is located."""
     originalpath = os.path.abspath(os.path.join(os.getcwd(), filename))
