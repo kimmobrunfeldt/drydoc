@@ -2,4 +2,6 @@
 *.egg-info
 *.pot
 *.py[co]
+.coverage
+.DS_Store
 

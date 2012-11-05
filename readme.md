@@ -1,9 +1,9 @@
 drydoc.py
 ---------
 
-It is a program that renders DRY documents to actual text
+Program that renders DRY documents to actual text.
 
-Dependencies
+Dependencies:
 
 - Python >=2.7, tested with 2.7 and 3.3
 - Jinja2 http://jinja.pocoo.org/docs/
