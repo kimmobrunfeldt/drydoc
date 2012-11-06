@@ -1,4 +1,3 @@
-
 #!/usr/bin/python
 
 """Renders DRY documents.
@@ -21,10 +20,10 @@ import sys
 import parsers
 import templatefunctions
 
-__version__ = '0.0.1'
+__version__ = '0.0.6'
 _PY3 = sys.version_info >= (3, 0)
 
-# Format: {'enginename': ('enginename', variable_engine, template_engine)}
+# Format: {'enginename': (variable_engine, template_engine)}
 # Variable engine format: (variable_parse_func, (Exception1, Exception2))
 # Template engine format: (TemplateClass, (Exception1, Exception2)
 # Exceptions listed in engines are catched, and nicer errors provided. To
