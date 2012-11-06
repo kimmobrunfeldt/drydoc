@@ -8,6 +8,7 @@ Tests for DRY document rendering.
 
 import filecmp
 import os
+import subprocess
 import sys
 import unittest
 
@@ -16,6 +17,7 @@ parentdir = os.path.abspath(os.path.join(scriptdir, os.path.pardir))
 sys.path.insert(0, parentdir)
 
 import drydoc
+import templatefunctions
 
 try:
     import yaml
@@ -112,6 +114,7 @@ class TestDryTextRender(unittest.TestCase):
 
 
 class TestDryFileRender(unittest.TestCase):
+    """Test file reading and writing"""
 
     def test_render_file(self):
         filepath = scriptdir + '/correct_drydoc.txt'
@@ -131,7 +134,28 @@ class TestDryFileRender(unittest.TestCase):
 
         os.remove(filepath)
 
-    # Todo: write tests for cross file variable accessing
+
+class TestFunctions(unittest.TestCase):
+    """Test templatefunctions"""
+
+    def drydoc(self, docpath):
+        filepath = os.path.join(scriptdir, '../drydoc.py')
+        func = templatefunctions.system
+        info = {'drydocdir': scriptdir}
+        return func('python %s %s' % (filepath, docpath), info)
+
+    def test_filevars(self):
+        rendered = self.drydoc('filevars.txt')
+        self.assertEqual(rendered, '1VAR', 'filevars failed')
+
+    def test_include(self):
+        rendered = self.drydoc('include.txt')
+        self.assertEqual(rendered, 'CONTENTCONTENT', 'include failed')
+
+    def test_system(self):
+        rendered = self.drydoc('system.txt')
+        self.assertEqual(rendered, 'systemtest\n', 'system function failed')
+
 
 if __name__ == '__main__':
     unittest.main()

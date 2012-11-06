@@ -1,0 +1,5 @@
+---
+soda_list: [pepsi, cola, fanta]
+...
+{% for item in soda_list %}{{ item }}
+{% endfor %}

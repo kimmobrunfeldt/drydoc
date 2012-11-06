@@ -4,7 +4,7 @@ shopping_list:
     - milk
     - bread
     - cola
-unicode: 汉语漢
+specialchars: 汉语漢
 ...
 
 {{ intro }}
@@ -12,4 +12,4 @@ unicode: 汉语漢
 Remember to buy:
 {% for item in shopping_list %}    - {{ item }}
 {% endfor %}
-Documents support unicode, so you can have text like this '{{ unicode }}'.
+Documents support unicode, so you can have text like this '{{ specialchars }}'.

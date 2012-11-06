@@ -1,0 +1,5 @@
+name: drydoc2.txt
+...
+This document is '{{ name }}'.
+
+The other document is '{{ filevars('../drydoc1.txt').name }}'

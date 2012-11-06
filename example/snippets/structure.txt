@@ -1,0 +1,4 @@
+---
+variable: variables
+...
+The actual template with {{ variable }}.

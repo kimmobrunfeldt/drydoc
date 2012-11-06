@@ -117,7 +117,7 @@ class DryDoc(object):
         template = text_parts[1]
 
         t = self.template_engine(template)
-        rendered = t.render(**variables).lstrip()
+        rendered = t.render(**variables).lstrip('\n')
         return rendered
 
     def _split_text(self, text):

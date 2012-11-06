@@ -1,0 +1,62 @@
+...
+filevars() - Variables across files
+-----------------------------------
+
+    def filevars(path):
+        """Returns variables, from DRY doc located in *path*, in dict format."""
+
+You can access variables in other DRY documents with filevars() function inside Jinja2 template.
+Filepaths are always relative to the document.
+
+For example:
+
+*./snippets/drydoc1.txt:*
+
+{{ include('snippets/drydoc1.txt', render=False) | indent(4, true) }}
+
+*./snippets/path/drydoc2.txt:*
+
+{{ include('snippets/path/drydoc2.txt', render=False) | indent(4, true) }}
+
+You can access dictionary's keys via attribute: dict.attr, or with normal syntax: dict['attr'].
+
+include() - Including documents
+-------------------------------
+
+    def include(path, render=True):
+        """Returns another document located in *path*. Set *render=False* if
+        you don't want to render the document.
+        """
+
+Documents can be included to other documents with include() function. When document B is included from document A, document B is rendered inside document A. Including document itself results to inifite recursion loop and will fail to exception.
+
+*list.txt:*
+
+{{ include('snippets/list.txt', render=False).rstrip() | indent(4, true) }}
+
+*likes.txt:*
+
+{{ include('snippets/likes.txt', render=False).rstrip() | indent(4, true) }}
+
+Now when *likes.txt* is rendered, it produces:
+
+{{ include('snippets/likes.txt').rstrip() | indent(4, true) }}
+
+You can also include normal text documents, just make sure they don't include the string which separates variable and template sections.
+Normal text document must not contain a line with only '...' characters and it must not start with '...'
+
+system() - Executing external programs
+--------------------------------------
+
+    def system(cmd):
+        """Executes *cmd* in shell and returns its output."""
+
+You can execute shell commands and pipe their output to the document with system() function.
+
+For example, a DRY document which renders to output of *'ls -l'*
+
+{{ include('snippets/ls.txt', render=False) | indent(4, true) }}
+
+Dynamically get newest trends from Twitter in nicely formatted JSON:
+
+{{ include('snippets/trends.txt', render=False) | indent(4, true) }}
