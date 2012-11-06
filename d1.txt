@@ -1,8 +1,0 @@
-name: d1.txt
-...
-This document is '{{ name }}'.
-
-The other document is '{{ filevars('d2.txt').name }}'.
-
-Include d2.txt:
-{{ include('d1.txt') }}

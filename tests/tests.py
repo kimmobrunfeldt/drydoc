@@ -69,30 +69,21 @@ document template
 
 
 def example_render_func(dry_text):
-    variable_engine = drydoc.variable_engines['example'][0]
-    template_engine = drydoc.template_engines['example'][0]
-    rendered = drydoc.render_dry_text(dry_text, variable_engine,
-                                      template_engine)
-    return rendered
+    doc = drydoc.DryDoc(dry_text, engine=drydoc.engines['example'])
+    return doc.render()
 
 
 def yj_render_func(dry_text):
-    variable_engine = drydoc.variable_engines['yaml'][0]
-    template_engine = drydoc.template_engines['jinja2'][0]
-    rendered = drydoc.render_dry_text(dry_text, variable_engine,
-                                      template_engine)
-    return rendered
+    doc = drydoc.DryDoc(dry_text, engine=drydoc.engines['yj'])
+    return doc.render()
 
 
 class TestDryTextRender(unittest.TestCase):
 
     def test_engine_setups(self):
 
-        self.assertEqual(_YAML, 'yaml' in drydoc.variable_engines,
-                         'yaml engine is missing')
-
-        self.assertEqual(_JINJA2, 'jinja2' in drydoc.template_engines,
-                         'jinja2 engine is missing')
+        self.assertEqual(_JINJA2 and _YAML, 'yj' in drydoc.engines,
+                         'yj engine is missing')
 
     def test_correct_example(self):
         rendered = example_render_func(correct_example)
@@ -103,7 +94,7 @@ class TestDryTextRender(unittest.TestCase):
         if _YAML and _JINJA2:
             rendered = yj_render_func(correct_yaml_jinja)
             self.assertEqual(correct_rendered, rendered,
-                             'yaml and jinja2 engines rendered incorrectly')
+                             'yaml-jinja engine rendered incorrectly')
 
     def test_empty_variable_definitions(self):
         rendered = example_render_func(empty_variable_definitions)

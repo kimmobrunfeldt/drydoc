@@ -40,13 +40,16 @@ Document structure
     The actual template with {{ variable }}.
 
 
-Document starts with variable definitions. Three empty dots in one line ends the variable definitions.
+Document starts with variable definitions. '...' in its own line ends the variable definitions.
 Variable definitions are in YAML http://en.wikipedia.org/wiki/YAML.
 Variables must be in dictionary-like format, so they can be passed to template engine.
 
 The rest of the document, after the three dots, is rendered as a Jinja2
 template, with the variables defined in the beginning.
 Whitespace from the beginning of actual template is stripped out.
+
+If there are no variable definitions, document's first line must be '...', for it to be recognized as a DRY document.
+Rendering a document without '...' separator produces the document itself.
 
 Example
 -------
@@ -88,7 +91,7 @@ Filepaths are always relative to the *original* DRY document.
 
 For example:
 
-/home/jack/drydoc1.txt:
+*/home/jack/drydoc1.txt:*
 
     name: drydoc1.txt
     ...
@@ -97,7 +100,7 @@ For example:
     The other document is '{{ filevars('library/drydoc2.txt').name }}'.
 
 
-/home/jack/library/drydoc2.txt:
+*/home/jack/library/drydoc2.txt:*
 
     name: drydoc2.txt
     ...
@@ -107,5 +110,33 @@ For example:
 
 The first level of dictionary nesting can be accessed via attribute, i.e. dict.attr. If the dictionary contains subdictionarys, they must be accessed normally with dict['attr'].
 
-    filevars('dates.txt').weekdays['monday']
+    {{ filevars('dates.txt').weekdays['monday'] }}
 
+Including documents
+-------------------
+
+Documents can be included to other documents. When document B is included from document A, document B is rendered inside document A.
+
+*list.txt:*
+
+    ---
+    soda_list: [pepsi, cola, fanta]
+    ...
+    {% for item in soda_list %}{{ item }}
+    {% endfor %}
+
+*doc.txt:*
+
+    ...
+    I like:
+    {{ include('list.txt') }}
+
+Now when *doc.txt* is rendered, it produces:
+
+    I like:
+    pepsi
+    cola
+    fanta
+
+You can also include normal text documents, just make sure they don't include the string which separates variable and template sections.
+Normal text document cannot contain a line with only '...' characters and cannot start with '...'

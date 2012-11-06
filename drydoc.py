@@ -1,3 +1,4 @@
+
 #!/usr/bin/python
 
 """Renders DRY documents.
@@ -15,48 +16,71 @@ Options:
   -o --output=<output>      Output file.
 """
 
-__version__ = '0.0.1'
-
-
 import os
 import sys
 import parsers
 import templatefunctions
 
+__version__ = '0.0.1'
+_PY3 = sys.version_info >= (3, 0)
 
-# Format: {name_of_engine: (variable_parse_func, (Exception1, Exception2))}
-variable_engines = {}
-# Format: {name_of_engine: (TemplateClass, (Exception1, Exception2))}
-template_engines = {}
-
+# Format: {'enginename': ('enginename', variable_engine, template_engine)}
+# Variable engine format: (variable_parse_func, (Exception1, Exception2))
+# Template engine format: (TemplateClass, (Exception1, Exception2)
 # Exceptions listed in engines are catched, and nicer errors provided. To
 # format messages even more, make your own exception class and
 # format errors in it.
+engines = {}
 
-# Import example engines.
-variable_engines['example'] = (parsers.parse_variables, (ValueError))
-template_engines['example'] = (parsers.Template, ())
+# Add example engine
+engines['example'] = ((parsers.parse_variables, ()),
+                      (parsers.Template, ()))
 
 try:
     import yaml
-    variable_engines['yaml'] = (yaml.load, (yaml.reader.ReaderError,
-                                            TypeError))
+    _YAML = True
 except ImportError:
+    _YAML = False
     pass
 
 try:
     import jinja2
-    template_engines['jinja2'] = (jinja2.Template, ())
+    _JINJA2 = True
+
+    # This class fixes the issue when trailing newline is removed, when it
+    # shouldn't be.
+    class FixedJinja2Template(jinja2.Template):
+        def __init__(self, text):
+            super(FixedJinja2Template, self).__init__(text)
+            self.text = text
+
+        def render(self, **kwargs):
+            rendered = super(FixedJinja2Template, self).render(**kwargs)
+            if self.text[-1] == '\n' and rendered[-1] != '\n':
+                rendered += '\n'
+            return rendered
+
 except ImportError:
+    _JINJA2 = False
     pass
+
+# Add yaml-jinja2 engine
+if _YAML and _JINJA2:
+    yaml_engine = (yaml.load, ())
+    jinja_engine = (FixedJinja2Template, ())
+    engines['yj'] = (yaml_engine, jinja_engine)
 
 
 # Constants
-_PY3 = sys.version_info >= (3, 0)
 default_encoding = 'utf-8'
 section_separator = '\n...\n'
 # Variables to pass by default to all templates
 template_variables = {}
+
+if _PY3:
+    default_engine = 'example'
+else:
+    default_engine = 'yj'
 
 
 class AttributeDict(dict):
@@ -68,7 +92,69 @@ class AttributeDict(dict):
     __setattr__ = dict.__setitem__
 
 
+class DryDoc(object):
+    def __init__(self, text, engine=engines[default_engine]):
+        self.text = text
+        self.variable_engine = engine[0][0]
+        self.template_engine = engine[1][0]
+
+    def get_variables(self):
+        return self._parse_variables()
+
+    def render(self, add_vars=None):
+        """Returns rendered text from DRY text.
+        You can optionally specify default variables to be sent to template.
+        Warning: these default variables override the ones in DRY doc.
+        """
+        text = self.text
+        text_parts = self._split_text(text)
+        if len(text_parts) != 2:
+            return text
+
+        variables = self.get_variables()
+        if add_vars is not None:
+            variables.update(add_vars)
+
+        template = text_parts[1]
+
+        t = self.template_engine(template)
+        rendered = t.render(**variables).lstrip()
+        return rendered
+
+    def _split_text(self, text):
+        """Splits text to two parts: variable and template sections.
+        It's callers resposibility to check that all parts exist.
+        """
+        separator = section_separator
+        if text.startswith(separator.lstrip()):
+            separator = separator.lstrip()
+        text_parts = text.split(separator, 1)
+        return text_parts
+
+    def _parse_variables(self):
+        """Parses variables from text and returns them in dict format."""
+        variables = {}
+        text_parts = self._split_text(self.text)
+        if len(text_parts) != 2:
+            return variables
+
+        top_section = text_parts[0].strip()
+
+        if len(top_section):
+            variables = self.variable_engine(top_section)
+
+        d = AttributeDict()
+        try:
+            d.update(variables)
+        except TypeError:
+            path = self.filepath
+            raise TypeError('Check syntax of variables in \'%s\'' % path)
+
+        return d
+
+
 def read_file(filepath, encoding=default_encoding):
+    """Reads file's contents and returns unicode."""
     open_func = open
     if _PY3:
         open_func = lambda f, mode: open(f, mode, encoding=encoding)
@@ -83,6 +169,7 @@ def read_file(filepath, encoding=default_encoding):
 
 
 def write_file(text, filepath, encoding=default_encoding):
+    """Writes unicode to file with specified encoding."""
     open_func = open
     if _PY3:
         open_func = lambda f, mode: open(f, mode, encoding=encoding)
@@ -93,76 +180,11 @@ def write_file(text, filepath, encoding=default_encoding):
         f.write(text)
 
 
-def inputfiledir(filename):
+def inputfile_dir(filename):
     """Returns the directory where given inputfile is located."""
-    originalpath = os.path.abspath(os.path.join(os.getcwd(), filename))
-    originaldir = os.path.split(originalpath)[0]
-    return originaldir
-
-
-def variables_from_file(filepath, originaldir, variable_engine,
-                        encoding=default_encoding):
-    """Returns variables dictionary from a DRY document.
-    originaldir is the directory where the original DRY document is
-    located.
-    """
-    filepath = os.path.abspath(os.path.join(originaldir, filepath))
-
-    variables = {}
-    dry_text = read_file(filepath, encoding=encoding)
-    text_parts = dry_text.split(section_separator, 1)
-    if len(text_parts) != 2:
-        return variables
-
-    top_section = text_parts[0].strip()
-
-    if len(top_section):
-        variables = variable_engine(top_section)
-
-    d = AttributeDict()
-    try:
-        d.update(variables)
-    except TypeError:
-        raise TypeError('Check syntax of variables in \'%s\'' % filepath)
-
-    return d
-
-
-def render_dry_text(dry_text, variable_engine, template_engine,
-                    add_variables=None):
-    """Returns rendered text from DRY text. dry_text must be unicode.
-    You can optionally specify default variables.
-    """
-    text_parts = dry_text.split(section_separator, 1)
-    if len(text_parts) != 2:
-        return dry_text
-
-    variables = text_parts[0].strip()
-    template = text_parts[1]
-
-    if not len(variables):
-        variables = {}
-    else:
-        variables = variable_engine(variables)
-
-    if add_variables is not None:
-        try:
-            variables.update(add_variables)
-        except TypeError:
-            # variables should be a dict-like object
-            raise TypeError('Check syntax of variables.')
-
-    t = template_engine(template)
-    rendered = t.render(**variables).lstrip()
-
-    # Try to detect if jinja2 is used
-    module = template_engine.__module__
-    if module is not None and 'jinja2.' in module:
-        # Jinja2 might remove last newline
-        if dry_text[-1] == '\n' and rendered[-1] != '\n':
-            rendered += '\n'
-
-    return rendered
+    inputfile_path = os.path.abspath(os.path.join(os.getcwd(), filename))
+    inputfile_dir = os.path.split(inputfile_path)[0]
+    return inputfile_dir
 
 
 def main():
@@ -173,6 +195,8 @@ def main():
     encoding = arguments['--encoding']
     if encoding is None:
         encoding = default_encoding
+
+    # Read drydoc in from whatever source
 
     filename = arguments['<filename>']
     if filename is not None:
@@ -185,41 +209,37 @@ def main():
         # This makes it possible to use via pipe e.g. x | python drydoc.py
         text = sys.stdin.read()
 
-    # Set the engines
-    name = 'yaml' if ('yaml' in variable_engines) else 'example'
-    variable_engine_info = variable_engines[name]
-    variable_engine, variable_engine_except = variable_engine_info
+    # Parse and render the drydoc
 
-    name = 'jinja2' if ('jinja2' in template_engines) else 'example'
-    template_engine_info = template_engines[name]
-    template_engine, template_engine_except = template_engine_info
-
-    if name == 'jinja2':
+    if default_engine == 'yj':
         # Add functions for jinja2 templates
         if filename is None:
             drydocdir = os.getcwd()
         else:
-            drydocdir = inputfiledir(filename)
+            drydocdir = inputfile_dir(filename)
 
         info = {'drydocdir': drydocdir, 'encoding': encoding,
-                'variable_engine': variable_engine,
-                'template_engine': template_engine,
+                'engine': engines[default_engine],
                 'inputfile': filename}
 
-        funcs = templatefunctions.get_all(info)
+        funcs = templatefunctions.get_funcs(info)
         template_variables.update(funcs)
 
-        info['template_variables'] = template_variables
+        info['template_vars'] = template_variables
+
+    engine = engines[default_engine]
+    doc = DryDoc(text)
 
     try:
-        rendered_text = render_dry_text(text, variable_engine, template_engine,
-                                        add_variables=template_variables)
-    except variable_engine_except as e:
+        rendered_text = doc.render(add_vars=template_variables)
+    except engine[0][1] as e:
         print('Error parsing variables: %s' % str(e).capitalize())
         sys.exit(1)
-    except template_engine_except as e:
+    except engine[1][1] as e:
         print('Error parsing template: %s' % str(e).capitalize())
         sys.exit(1)
+
+    # Output the rendered text to where ever
 
     output = arguments['--output']
     if output is not None:
