@@ -44,7 +44,7 @@ Document structure
     ...
     The actual template with {{ variable }}.
 
-Document starts with variable definitions. '...' in its own line ends the variable definitions.
+Document starts with variable definitions. Definitions are followed by '...' in its own line end the section.
 Variable definitions are in YAML http://en.wikipedia.org/wiki/YAML.
 Variables must be in dictionary-like format, so they can be passed to template engine.
 
@@ -96,15 +96,17 @@ Custom functions that are usable in templates are defined in *templatefunctions.
 filevars() - Variables across files
 -----------------------------------
 
-    def filevars(path):
-        """Returns variables, from DRY doc located in *path*, in dict format."""
+```python
+def filevars(path):
+    """Returns variables, from DRY doc located in path, in dict format."""
+```
 
 You can access variables in other DRY documents with filevars() function inside Jinja2 template.
 Filepaths are always relative to the document.
 
 For example:
 
-*./snippets/drydoc1.txt:*
+*example/snippets/drydoc1.txt:*
 
     name: drydoc1.txt
     ...
@@ -112,7 +114,7 @@ For example:
     
     The other document is '{{ filevars('path/drydoc2.txt').name }}'.
 
-*./snippets/path/drydoc2.txt:*
+*example/snippets/path/drydoc2.txt:*
 
     name: drydoc2.txt
     ...
@@ -125,10 +127,12 @@ You can access dictionary's keys via attribute: dict.attr, or with normal syntax
 include() - Including documents
 -------------------------------
 
-    def include(path, render=True):
-        """Returns another document located in *path*. Set *render=False* if
-        you don't want to render the document.
-        """
+```python
+def include(path, render=True):
+    """Returns another document located in path. Set render=False if
+    you don't want to render the document.
+    """
+```
 
 Documents can be included to other documents with include() function. When document B is included from document A, document B is rendered inside document A. Including document itself results to inifite recursion loop and will fail to exception.
 
@@ -159,8 +163,10 @@ Normal text document must not contain a line with only '...' characters and it m
 system() - Executing external programs
 --------------------------------------
 
-    def system(cmd):
-        """Executes *cmd* in shell and returns its output."""
+```python
+def system(cmd):
+    """Executes cmd in shell and returns its output."""
+```
 
 You can execute shell commands and pipe their output to the document with system() function.
 

@@ -2,19 +2,21 @@
 filevars() - Variables across files
 -----------------------------------
 
-    def filevars(path):
-        """Returns variables, from DRY doc located in *path*, in dict format."""
+```python
+def filevars(path):
+    """Returns variables, from DRY doc located in path, in dict format."""
+```
 
 You can access variables in other DRY documents with filevars() function inside Jinja2 template.
 Filepaths are always relative to the document.
 
 For example:
 
-*./snippets/drydoc1.txt:*
+*example/snippets/drydoc1.txt:*
 
 {{ include('snippets/drydoc1.txt', render=False) | indent(4, true) }}
 
-*./snippets/path/drydoc2.txt:*
+*example/snippets/path/drydoc2.txt:*
 
 {{ include('snippets/path/drydoc2.txt', render=False) | indent(4, true) }}
 
@@ -23,10 +25,12 @@ You can access dictionary's keys via attribute: dict.attr, or with normal syntax
 include() - Including documents
 -------------------------------
 
-    def include(path, render=True):
-        """Returns another document located in *path*. Set *render=False* if
-        you don't want to render the document.
-        """
+```python
+def include(path, render=True):
+    """Returns another document located in path. Set render=False if
+    you don't want to render the document.
+    """
+```
 
 Documents can be included to other documents with include() function. When document B is included from document A, document B is rendered inside document A. Including document itself results to inifite recursion loop and will fail to exception.
 
@@ -48,8 +52,10 @@ Normal text document must not contain a line with only '...' characters and it m
 system() - Executing external programs
 --------------------------------------
 
-    def system(cmd):
-        """Executes *cmd* in shell and returns its output."""
+```python
+def system(cmd):
+    """Executes cmd in shell and returns its output."""
+```
 
 You can execute shell commands and pipe their output to the document with system() function.
 

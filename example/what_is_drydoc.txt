@@ -8,7 +8,7 @@ Document structure
 
 {{ include('snippets/structure.txt', render=False) | indent(4, true) }}
 
-Document starts with variable definitions. '{{ filevars('readme.md').separator }}' in its own line ends the variable definitions.
+Document starts with variable definitions. Definitions are followed by '{{ filevars('readme.md').separator }}' in its own line end the section.
 Variable definitions are in YAML http://en.wikipedia.org/wiki/YAML.
 Variables must be in dictionary-like format, so they can be passed to template engine.
 
