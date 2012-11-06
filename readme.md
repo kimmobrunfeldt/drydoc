@@ -9,7 +9,7 @@ Dependencies:
 - Jinja2 http://jinja.pocoo.org/docs/
 - PyYAML http://pyyaml.org/wiki/PyYAML
 
-If Jinja2 or PyYAML is not provided, documents are parsed with code in *parsers.py*.
+If Jinja2 or PyYAML is not provided, documents are parsed with parsers in *parsers.py*.
 They are just for an example how to add custom engines.
 
 Usage
@@ -50,7 +50,7 @@ The rest of the document, after the three dots, is rendered as a Jinja2
 template, with the variables defined in the beginning.
 Whitespace from the beginning of actual template is stripped out.
 
-If there are no variable definitions, document must contain '...' in its own line, for it to be recognized as a DRY document.
+If there are no variable definitions, document must contain '...' in it, for it to be recognized as a DRY document.
 Rendering a document without '...' separator produces the document itself.
 
 Example
