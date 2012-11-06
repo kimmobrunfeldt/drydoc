@@ -117,7 +117,7 @@ The first level of dictionary nesting can be accessed via attribute, i.e. dict.a
 Including documents
 -------------------
 
-Documents can be included to other documents with include() function. When document B is included from document A, document B is rendered inside document A.
+Documents can be included to other documents with include() function. When document B is included from document A, document B is rendered inside document A. Including document itself results to inifite recursion loop and will fail to exception.
 
 *list.txt:*
 
