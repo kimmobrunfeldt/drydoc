@@ -142,3 +142,22 @@ Now when *doc.txt* is rendered, it produces:
 
 You can also include normal text documents, just make sure they don't include the string which separates variable and template sections.
 Normal text document must not contain a line with only '...' characters and it must not start with '...'
+
+
+Executing external programs
+---------------------------
+
+You can execute shell commands and pipe their output to the document with system() function.
+
+For example, a DRY document which renders to output of *'ls -l'*
+
+    ...
+    {{ system('ls -l') }}
+
+Dynamically get newest trends from Twitter in nicely formatted JSON:
+
+    ...
+    {{ system('curl -s http://api.twitter.com/1/trends/1.json | python -m json.tool') }}
+
+
+

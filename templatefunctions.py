@@ -3,7 +3,14 @@ New custom templatefunctions should be added in this module.
 """
 
 import os
+import subprocess
 import drydoc
+
+
+def system(cmd, info):
+    PIPE = subprocess.PIPE
+    output = subprocess.Popen(cmd, stdout=PIPE, stdin=PIPE, shell=True)
+    return output.communicate()[0]
 
 
 def filevars(path, info):
@@ -28,4 +35,5 @@ def get_funcs(info):
     d = {}
     d['filevars'] = lambda path: filevars(path, info)
     d['include'] = lambda path: include(path, info)
+    d['system'] = lambda cmd: system(cmd, info)
     return d
