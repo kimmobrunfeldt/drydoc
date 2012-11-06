@@ -162,7 +162,7 @@ def read_file(filepath, encoding=default_encoding):
         content = f.read()
 
     if not _PY3:
-        content = content.decode(encoding)
+        content = content.decode(encoding, errors='replace')
 
     return content
 
@@ -173,7 +173,7 @@ def write_file(text, filepath, encoding=default_encoding):
     if _PY3:
         open_func = lambda f, mode: open(f, mode, encoding=encoding)
     else:
-        text = text.encode(encoding)
+        text = text.encode(encoding, errors='replace')
 
     with open_func(filepath, 'w') as f:
         f.write(text)
@@ -251,7 +251,7 @@ def main():
         if _PY3:
             sys.stdout.write(rendered_text)
         else:
-            sys.stdout.write(rendered_text.encode(encoding))
+            sys.stdout.write(rendered_text.encode(encoding, errors='replace'))
 
 
 if __name__ == '__main__':
