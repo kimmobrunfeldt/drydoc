@@ -117,7 +117,7 @@ The first level of dictionary nesting can be accessed via attribute, i.e. dict.a
 Including documents
 -------------------
 
-Documents can be included to other documents. When document B is included from document A, document B is rendered inside document A.
+Documents can be included to other documents with include() function. When document B is included from document A, document B is rendered inside document A.
 
 *list.txt:*
 
@@ -141,4 +141,4 @@ Now when *doc.txt* is rendered, it produces:
     fanta
 
 You can also include normal text documents, just make sure they don't include the string which separates variable and template sections.
-Normal text document cannot contain a line with only '...' characters and cannot start with '...'
+Normal text document must not contain a line with only '...' characters and it must not start with '...'
