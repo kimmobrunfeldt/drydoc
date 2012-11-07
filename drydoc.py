@@ -20,7 +20,7 @@ import sys
 import parsers
 import templatefunctions
 
-__version__ = '0.0.6'
+__version__ = '0.1.0'
 _PY3 = sys.version_info >= (3, 0)
 
 # Format: {'enginename': (variable_engine, template_engine)}
