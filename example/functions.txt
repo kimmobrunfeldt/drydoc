@@ -1,10 +1,12 @@
+path_explanation: path is relative to the document, or it can be full path.
 ...
 filevars() - Variables across files
 -----------------------------------
 
 ```python
 def filevars(path):
-    """Returns variables, from DRY doc located in path, in dict format."""
+    """Returns variables, from DRY doc located in path, in dict format.
+    {{ path_explanation }}"""
 ```
 
 You can access variables in other DRY documents with filevars() function inside Jinja2 template.
@@ -29,6 +31,7 @@ include() - Including documents
 def include(path, render=True):
     """Returns another document located in path. Set render=False if
     you don't want to render the document.
+    {{ path_explanation }}
     """
 ```
 
@@ -54,7 +57,9 @@ system() - Executing external programs
 
 ```python
 def system(cmd):
-    """Executes cmd in shell and returns its output."""
+    """Executes cmd in shell and returns its output.
+    Commands are executed in the directory where document is located.
+    """
 ```
 
 You can execute shell commands and pipe their output to the document with system() function.

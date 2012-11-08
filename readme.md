@@ -1,7 +1,11 @@
 General
 =======
 
-Program that renders DRY documents to actual text. You can structure your text files better.
+DRY document is a text file with variables and templating features to prevent you from
+repeating yourself throughout the document. This document was also rendered with *drydoc.py*.
+This document is located in *example* directory.
+
+*drydoc.py* renders DRY documents to actual text. You can structure your text files better.
 
 Dependencies:
 
@@ -29,15 +33,8 @@ Usage
       -e --encoding=<encoding>  Encoding of the input file.
       -o --output=<output>      Output file.
 
-What is DRY document?
+Writing DRY documents
 =====================
-
-DRY document is a text file with variables and templating features to prevent you from
-repeating yourself throughout the document. This document was also rendered with *drydoc.py*.
-This document is located in *example* directory.
-
-Document structure
-------------------
 
     ---
     variable: variables
@@ -52,7 +49,7 @@ The rest of the document, after the three dots, is rendered as a Jinja2
 template, with the variables defined in the beginning.
 New lines from the beginning of actual template are stripped out.
 
-If there are no variable definitions, document must contain '...' in it, for it to be recognized as a DRY document.
+If there are no variable definitions, document must contain '...' in its own line before any other text, for it to be recognized as a DRY document.
 Rendering a document without '...' separator produces the document itself.
 
 Example
@@ -93,12 +90,15 @@ Functions
 Python functions can be run in templates. In Jinja2 you must explicity add functions to the environment.
 Custom functions that are usable in templates are defined in *templatefunctions.py*.
 
+**The working directory in functions should be the same as the document's location. For example, all file paths in a document are relative to the document itself.**
+
 filevars() - Variables across files
 -----------------------------------
 
 ```python
 def filevars(path):
-    """Returns variables, from DRY doc located in path, in dict format."""
+    """Returns variables, from DRY doc located in path, in dict format.
+    path is relative to the document, or it can be full path."""
 ```
 
 You can access variables in other DRY documents with filevars() function inside Jinja2 template.
@@ -131,6 +131,7 @@ include() - Including documents
 def include(path, render=True):
     """Returns another document located in path. Set render=False if
     you don't want to render the document.
+    path is relative to the document, or it can be full path.
     """
 ```
 
@@ -165,7 +166,9 @@ system() - Executing external programs
 
 ```python
 def system(cmd):
-    """Executes cmd in shell and returns its output."""
+    """Executes cmd in shell and returns its output.
+    Commands are executed in the directory where document is located.
+    """
 ```
 
 You can execute shell commands and pipe their output to the document with system() function.
@@ -179,3 +182,11 @@ Dynamically get newest trends from Twitter in nicely formatted JSON:
 
     ...
     {{ system('curl -s http://api.twitter.com/1/trends/1.json | python -m json.tool') }}
+
+
+Thanks
+------
+
+- https://github.com/docopt/docopt
+- http://jinja.pocoo.org/
+- http://pyyaml.org/wiki/PyYAML

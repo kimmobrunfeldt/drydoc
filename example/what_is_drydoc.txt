@@ -1,10 +1,4 @@
 ...
-DRY document is a text file with variables and templating features to prevent you from
-repeating yourself throughout the document. This document was also rendered with *{{ filevars('readme.md').program_name }}*.
-This document is located in *example* directory.
-
-Document structure
-------------------
 
 {{ include('snippets/structure.txt', render=False) | indent(4, true) }}
 
@@ -16,7 +10,7 @@ The rest of the document, after the three dots, is rendered as a Jinja2
 template, with the variables defined in the beginning.
 New lines from the beginning of actual template are stripped out.
 
-If there are no variable definitions, document must contain '{{ filevars('readme.md').separator }}' in it, for it to be recognized as a DRY document.
+If there are no variable definitions, document must contain '{{ filevars('readme.md').separator }}' in its own line before any other text, for it to be recognized as a DRY document.
 Rendering a document without '{{ filevars('readme.md').separator }}' separator produces the document itself.
 
 Example
