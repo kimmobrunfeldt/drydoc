@@ -20,7 +20,7 @@ import sys
 import parsers
 import templatefunctions
 
-__version__ = '0.1.0'
+__version__ = '0.1.1'
 _PY3 = sys.version_info >= (3, 0)
 
 # Format: {'enginename': (variable_engine, template_engine)}
@@ -73,8 +73,8 @@ if _YAML and _JINJA2:
 # Constants
 default_encoding = 'utf-8'
 section_separator = '\n...\n'
-# Variables to pass by default to all templates
-template_variables = {}
+# Objects to pass by default to all templates
+template_env = {}
 
 if _PY3:
     default_engine = 'example'
@@ -100,10 +100,11 @@ class DryDoc(object):
     def get_variables(self):
         return self._parse_variables()
 
-    def render(self, add_vars=None):
+    def render(self, env=None):
         """Returns rendered text from DRY text.
-        You can optionally specify default variables to be sent to template.
-        Warning: these default variables override the ones in DRY doc.
+        You can optionally specify env, dictionary of objects
+        to be sent to template.
+        Warning: variables in env dict override the ones in DRY doc.
         """
         text = self.text
         text_parts = self._split_text(text)
@@ -111,8 +112,8 @@ class DryDoc(object):
             return text
 
         variables = self.get_variables()
-        if add_vars is not None:
-            variables.update(add_vars)
+        if env is not None:
+            variables.update(env)
 
         template = text_parts[1]
 
@@ -213,24 +214,24 @@ def main():
     if default_engine == 'yj':
         # Add functions for jinja2 templates
         if filename is None:
-            drydocdir = os.getcwd()
+            docdir = os.getcwd()
         else:
-            drydocdir = inputfile_dir(filename)
+            docdir = inputfile_dir(filename)
 
-        info = {'drydocdir': drydocdir, 'encoding': encoding,
+        info = {'docdir': docdir, 'encoding': encoding,
                 'engine': engines[default_engine],
-                'inputfile': filename}
+                'inputfile': filename,
+                'template_env': template_env}
 
+        # Add template functions to environment
         funcs = templatefunctions.get_funcs(info)
-        template_variables.update(funcs)
-
-        info['template_vars'] = template_variables
+        info['template_funcs'] = funcs
+        template_env.update(funcs)
 
     engine = engines[default_engine]
     doc = DryDoc(text)
-
     try:
-        rendered_text = doc.render(add_vars=template_variables)
+        rendered_text = doc.render(env=template_env)
     except engine[0][1] as e:
         print('Error parsing variables: %s' % str(e).capitalize())
         sys.exit(1)

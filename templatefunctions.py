@@ -1,8 +1,13 @@
 """
 New custom templatefunctions should be added in this module.
+Prefix template functions with 'template_'. It is used to detect template
+functions. Funtions are callable from templates without the prefix.
 """
 
-# Todo: this module seems kind of hacky?
+# Todo: This module seems kind of hacky? Maybe modifying Jinja2 instead of
+#       passing template functions as environment variables would be better.
+# On the other hand, this way jinja2.Template class doesn't have to be
+# modified roughly.
 
 # Warning: All imported modules will be accessible from templates!
 import os
@@ -11,44 +16,79 @@ import subprocess
 import drydoc
 
 
-def system(cmd, info):
+func_prefix = 'template_'
+
+
+def assign_kwargs(func, **new_kwargs):
+    """Create wrapper funcion for func, which modifies kwargs to be passed
+    to func based on what new_kwargs contains.
+    """
+    def new_func(*args, **kwargs):
+        for key, value in new_kwargs.items():
+            if key not in kwargs:
+                kwargs[key] = value
+        return func(*args, **kwargs)
+    new_func.__name__ = func.__name__
+    return new_func
+
+
+def template_system(cmd, info=None):
     PIPE = subprocess.PIPE
     STDOUT = subprocess.STDOUT
-    docdir = info['drydocdir']
+    docdir = info['docdir']
     # Set working directory where the document is located
     output = subprocess.Popen(cmd, stdout=PIPE, stderr=STDOUT, stdin=PIPE,
                               shell=True, cwd=docdir)
     return output.communicate()[0]
 
 
-def filevars(path, info):
-    docdir = info['drydocdir']
+def template_filevars(path, info=None):
+    docdir = info['docdir']
     filepath = os.path.abspath(os.path.join(docdir, path))
     contents = drydoc.read_file(filepath, encoding=info['encoding'])
     doc = drydoc.DryDoc(contents)
     return doc.get_variables()
 
 
-def include(path, info, render):
-    docdir = info['drydocdir']
+def template_include(path, render=True, info=None):
+    """Returns document in path. path is relative to the document where
+    include is called. By default, document is rendered as DRY doc.
+    """
+    docdir = info['docdir']
     filepath = os.path.abspath(os.path.join(docdir, path))
+
     contents = drydoc.read_file(filepath)
     if not render:
         return contents
     doc = drydoc.DryDoc(contents)
 
     # Copy info dictionary to prevent next templates to change
-    # document's location. Create new include function to be given to
-    # next template
+    # data in it. Each document gets their own info dictionary.
     newinfo = info.copy()
-    f = lambda path, render=True: include(path, newinfo, render=render)
-    newinfo['template_vars']['include'] = f
 
     # Update document's location to next template
     newdir = os.path.split(filepath)[0]
-    newinfo['drydocdir'] = newdir
+    newinfo['docdir'] = newdir
 
-    return doc.render(add_vars=newinfo['template_vars'])
+    # Create new template functions and pass newinfo which contains the
+    # new docdir to them
+    newfuncs = {}
+    for name, func in info['template_funcs'].items():
+        funcname = getattr(func, '__name__', None)
+
+        # Assign newinfo to all template functions
+        if funcname is not None and func.__name__.startswith(func_prefix):
+            newfunc = assign_kwargs(func, info=newinfo)
+            newfunc.__name__ = func.__name__
+            newname = func.__name__[len(func_prefix):]
+            newfuncs[newname] = newfunc
+        else:
+            newfuncs[name] = func
+
+    newinfo['template_funcs'] = newfuncs
+    env = newinfo['template_env']
+    env.update(newfuncs)
+    return doc.render(env=env)
 
 
 def get_funcs(info):
@@ -61,8 +101,16 @@ def get_funcs(info):
     d.update(globals())
     d.update(globals()['__builtins__'])
 
-    d['filevars'] = lambda path: filevars(path, info)
-    d['include'] = lambda path, render=True: include(path, info, render=render)
-    d['system'] = lambda cmd: system(cmd, info)
+    # Add all functions from this module which start with func_prefix.
+    funcs = []
+    for name in dir(sys.modules[__name__]):
+        if name.startswith(func_prefix):
+            funcs.append(globals()[name])
+
+    for func in funcs:
+        newfunc = assign_kwargs(func, info=info)
+        newfunc.__name__ = func.__name__
+        newname = func.__name__[len(func_prefix):]
+        d[newname] = newfunc
 
     return d

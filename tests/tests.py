@@ -12,6 +12,8 @@ import subprocess
 import sys
 import unittest
 
+_PY3 = sys.version_info >= (3, 0)
+
 scriptdir = os.path.split(os.path.realpath(__file__))[0]
 parentdir = os.path.abspath(os.path.join(scriptdir, os.path.pardir))
 sys.path.insert(0, parentdir)
@@ -140,21 +142,41 @@ class TestFunctions(unittest.TestCase):
 
     def drydoc(self, docpath):
         filepath = os.path.join(scriptdir, '../drydoc.py')
-        func = templatefunctions.system
-        info = {'drydocdir': scriptdir}
+        func = templatefunctions.template_system
+        info = {'docdir': scriptdir}
         return func('python %s %s' % (filepath, docpath), info)
 
     def test_filevars(self):
         rendered = self.drydoc('filevars.txt')
-        self.assertEqual(rendered, '1VAR', 'filevars failed')
+        compare = b'1VAR' if _PY3 else '1VAR'
+        self.assertEqual(rendered, compare, 'filevars failed')
 
     def test_include(self):
         rendered = self.drydoc('include.txt')
-        self.assertEqual(rendered, 'CONTENTCONTENT', 'include failed')
+        compare = b'CONTENTCONTENT' if _PY3 else 'CONTENTCONTENT'
+        self.assertEqual(rendered, compare, 'include failed')
 
     def test_system(self):
         rendered = self.drydoc('system.txt')
-        self.assertEqual(rendered, 'systemtest\n', 'system function failed')
+        compare = b'systemtest\n' if _PY3 else 'systemtest\n'
+        self.assertEqual(rendered, compare, 'system function failed')
+
+        # System calls should be executed in directory where document is
+        # located
+        filepath = os.path.join(scriptdir, 'dirA/pwd.txt')
+        filedir = os.path.split(filepath)[0]
+
+        rendered = self.drydoc('dirA/pwd.txt')
+        if _PY3:
+            rendered = rendered.decode('utf-8')
+        self.assertEqual(rendered, filedir + '\n',
+                         'system function failed pwd test')
+
+    def test_specialcharpaths(self):
+        rendered = self.drydoc('specialcharpaths/specialpath.txt')
+        compare = b'12' if _PY3 else '12'
+        self.assertEqual(rendered, compare,
+                         'including path with special chars failed')
 
 
 if __name__ == '__main__':
