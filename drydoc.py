@@ -69,17 +69,15 @@ if _YAML and _JINJA2:
     jinja_engine = (FixedJinja2Template, ())
     engines['yj'] = (yaml_engine, jinja_engine)
 
+    default_engine = 'yj'
+else:
+    default_engine = 'example'
 
 # Constants
 default_encoding = 'utf-8'
 section_separator = '\n...\n'
 # Objects to pass by default to all templates
 template_env = {}
-
-if _PY3:
-    default_engine = 'example'
-else:
-    default_engine = 'yj'
 
 
 class AttributeDict(dict):
